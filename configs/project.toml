@@ -1,0 +1,4 @@
+[data]
+chunk_size = 250000
+memory_limit = "3GB"
+threads = 4
