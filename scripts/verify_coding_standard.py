@@ -169,8 +169,11 @@ def _inspect(path: Path) -> list[dict]:
 
 def _import_cycles(package: Path) -> list[list[str]]:
     graph: dict[str, set[str]] = {}
-    for path in package.glob("*.py"):
-        graph[path.stem] = local_imports(path)
+    for path in package.rglob("*.py"):
+        name = ".".join(path.relative_to(package).with_suffix("").parts)
+        if name.endswith(".__init__"):
+            name = name.removesuffix(".__init__")
+        graph[name] = local_imports(path)
     cycles: list[list[str]] = []
     visited: set[str] = set()
 
@@ -230,7 +233,7 @@ def main() -> None:
         ],
     }
     save_json(settings.outputs / "checks/coding_standard.json", report)
-    print(f"PDF static rules passed={report['passed']}; {len(findings)} findings.")
+    print(f"Coding rules passed={report['passed']}; {len(findings)} findings.")
     for finding in findings:
         print(finding)
     raise SystemExit(0 if report["passed"] else 1)

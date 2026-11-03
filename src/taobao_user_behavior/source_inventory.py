@@ -45,7 +45,7 @@ def local_imports(path: Path) -> set[str]:
         else:
             continue
         dependencies.update(
-            module.split(".")[1]
+            module.removeprefix("taobao_user_behavior.")
             for module in modules
             if module.startswith("taobao_user_behavior.")
         )

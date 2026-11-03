@@ -1,4 +1,4 @@
-"""从命令行或PyCharm启动数据检查。
+"""从命令行执行数据检查、探索分析和特征计算。
 
 主要接口：run_stage、main。
 """
@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 from taobao_user_behavior.inspection import inspect_source
+from taobao_user_behavior.quality import audit, ingest
 from taobao_user_behavior.settings import Settings, load_runtime_settings
 from taobao_user_behavior.source_inventory import source_fingerprints
 from taobao_user_behavior.storage import save_json
@@ -23,14 +24,17 @@ from taobao_user_behavior.storage import save_json
 STAGES = {
     "inspect": ("inspection", "inspect_source"),
     "audit": ("quality", "audit"),
+    "eda": ("analysis.pipeline", "analyze"),
+    "charts": ("analysis.pipeline", "render_existing"),
+    "features": ("features.pipeline", "build_features"),
 }
 
 
 def run_stage(name: str, settings: Settings, arguments: argparse.Namespace) -> None:
-    """执行样本检查或全量清洗，将结果写入当前运行目录。
+    """执行样本检查、全量清洗、EDA、绘图或正式特征构建。
 
     Args:
-        name: 阶段名称，取inspect或audit。
+        name: 阶段名称，取inspect、audit、eda、charts或features。
         settings: 本次运行的参数与输出目录。
         arguments: 输入文件和样本条数等命令行参数。
     """
@@ -39,10 +43,13 @@ def run_stage(name: str, settings: Settings, arguments: argparse.Namespace) -> N
         save_json(settings.outputs / "input_profile.json", asdict(profile))
         logging.info("Inspected %s records; this is a sample.", profile.sampled_rows)
         return
+    if name in {"audit", "eda"}:
+        ingest(arguments.input, settings)
+        audit(settings)
+        if name == "audit":
+            return
     module_name, function_name = STAGES[name]
     module = importlib.import_module(f"taobao_user_behavior.{module_name}")
-    if name == "audit":
-        module.ingest(arguments.input, settings)
     getattr(module, function_name)(settings)
 
 
@@ -54,10 +61,12 @@ def main() -> None:
     parser.add_argument("--sample-rows", type=int, default=1000)
     parser.add_argument("--run-root", type=Path)
     arguments = parser.parse_args()
-    if arguments.input is None:
+    if arguments.input is None and arguments.stage in {"inspect", "audit", "eda"}:
         parser.error("Provide --input or set TAOBAO_INPUT to the local ZIP path.")
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     project = Path(__file__).resolve().parent
+    if arguments.input is not None:
+        arguments.input = (project / arguments.input).resolve()
     settings = load_runtime_settings(project, arguments.run_root)
     started = time.perf_counter()
     run_stage(arguments.stage, settings, arguments)

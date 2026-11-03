@@ -5,13 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "taobao-user-behavior-analysis"
 version = "0.1.0"
-description = "Local user behavior data inspection and governance."
+description = "User behavior governance, exploratory analysis and temporal features."
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "duckdb>=1.1,<2.0",
     "pandas>=2.2,<3.0",
     "pyarrow>=16,<21",
     "tomli>=2.0,<3.0; python_version < '3.11'",
+    "matplotlib>=3.10,<3.11",
 ]
 
 [project.optional-dependencies]
@@ -25,9 +26,8 @@ dev = [
     "mypy>=1.10,<2",
 ]
 
-[tool.setuptools]
-packages = ["taobao_user_behavior"]
-package-dir = {taobao_user_behavior = "src/taobao_user_behavior"}
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.black]
 line-length = 88

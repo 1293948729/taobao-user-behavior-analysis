@@ -9,7 +9,8 @@ __pycache__/
 .vscode/
 build/
 dist/
-runs/
+/artifacts/
+/data/
 *.zip
 *.csv
 *.parquet
@@ -20,5 +21,6 @@ runs/
 *.xlsx
 *.md
 README*
+!/README.md
 .env*
 configs/local.*

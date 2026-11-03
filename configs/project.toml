@@ -2,3 +2,4 @@
 chunk_size = 250000
 memory_limit = "3GB"
 threads = 4
+hourly_repeat_limit = 100

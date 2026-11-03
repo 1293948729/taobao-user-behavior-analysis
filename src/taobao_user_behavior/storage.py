@@ -61,11 +61,14 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def connect(settings: Settings) -> duckdb.DuckDBPyConnection:
+def connect(
+    settings: Settings, event_path: Path | None = None
+) -> duckdb.DuckDBPyConnection:
     """建立临时内存连接，供查询标准事件使用。
 
     Args:
         settings: 内存、线程数和事件文件位置。
+        event_path: 可选的标准事件文件，未指定时读取正式结果。
 
     Returns:
         含events视图的连接，调用方负责关闭。
@@ -74,5 +77,6 @@ def connect(settings: Settings) -> duckdb.DuckDBPyConnection:
     connection.execute("SET memory_limit = ?", [settings.memory_limit])
     connection.execute("SET threads = ?", [settings.threads])
     connection.execute("SET preserve_insertion_order = false")
-    connection.read_parquet(str(settings.data / "events.parquet")).create_view("events")
+    source = event_path if event_path is not None else settings.data / "events.parquet"
+    connection.read_parquet(str(source)).create_view("events")
     return connection

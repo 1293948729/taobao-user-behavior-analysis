@@ -78,8 +78,10 @@ def main() -> None:
             for path in sources
         },
     }
-    destination = arguments.report or (
-        load_runtime_settings(root).outputs / "checks" / "quality.json"
+    destination = (
+        (root / arguments.report).resolve()
+        if arguments.report is not None
+        else load_runtime_settings(root).outputs / "checks" / "quality.json"
     )
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(
