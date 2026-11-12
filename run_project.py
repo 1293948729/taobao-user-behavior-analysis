@@ -27,14 +27,15 @@ STAGES = {
     "eda": ("analysis.pipeline", "analyze"),
     "charts": ("analysis.pipeline", "render_existing"),
     "features": ("features.pipeline", "build_features"),
+    "prepare": ("preparation.pipeline", "prepare_data"),
 }
 
 
 def run_stage(name: str, settings: Settings, arguments: argparse.Namespace) -> None:
-    """执行样本检查、全量清洗、EDA、绘图或正式特征构建。
+    """执行样本检查、清洗、分析、特征构建或训练数据准备。
 
     Args:
-        name: 阶段名称，取inspect、audit、eda、charts或features。
+        name: 阶段名称，取inspect、audit、eda、charts、features或prepare。
         settings: 本次运行的参数与输出目录。
         arguments: 输入文件和样本条数等命令行参数。
     """

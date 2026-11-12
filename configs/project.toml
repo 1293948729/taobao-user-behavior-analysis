@@ -3,3 +3,9 @@ chunk_size = 250000
 memory_limit = "3GB"
 threads = 4
 hourly_repeat_limit = 100
+
+[preparation]
+seed = 20261107
+negative_ratio = 100
+correlation_limit = 0.98
+near_constant_share = 0.999

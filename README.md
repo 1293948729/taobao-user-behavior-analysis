@@ -34,6 +34,9 @@ time,user_id,item_id,item_category,behavior_type
 
 # 使用已清洗的数据构建特征和标签
 .\.venv\Scripts\python.exe run_project.py --stage features
+
+# 检查时间分布，筛选特征并准备训练采样方案
+.\.venv\Scripts\python.exe run_project.py --stage prepare
 ```
 
 只做清洗和质量统计时使用 `--stage audit`；已有完整分析结果时，可用 `--stage charts` 重新绘图。运行参数在 `configs/` 中配置。
@@ -60,7 +63,13 @@ time,user_id,item_id,item_category,behavior_type
 | 类目热度 | 7 | 行为量、交互用户数、商品数 |
 | 偏好占比与辅助标记 | 10 | 类目偏好、交互占比、事件比、缺失标记、截点星期 |
 
+## 训练数据准备
 
+保留完整特征表，另按固定字段清单生成建模用表。筛选只使用完整训练集，不使用标签或验证、测试数据确定筛选规则。检查常量、完全重复、行为总量关系及同层特征的秩相关。时间距离、占比、事件比、活跃天数和跨层关系保留业务区分，高相关只作提示。
+
+训练负采样保留全部正例，按固定种子抽取负例。默认负正比上限为100:1，同时统计20:1、50:1和100:1的样本规模与覆盖。完整自然训练数据另有类别权重方案，两种方案不默认叠加。验证集和测试集保持自然比例，latest不含标签。
+
+参数在`configs/project.toml`的`preparation`中配置。完整宽表保存在`artifacts/data/features`，筛选后的数据在`artifacts/data/prepared`，统计和字段清单在`artifacts/outputs/preparation`。这些方案尚未通过模型效果对比。
 
 ## 项目结构
 
@@ -70,6 +79,7 @@ src/taobao_user_behavior/
   analysis/         SQL 聚合与探索分析
   visualization/    图表绘制
   features/         样本窗口、特征计算和字段说明
+  preparation/      时间核验、特征筛选和训练采样
   settings.py       参数与路径配置
   storage.py        文件读写
 scripts/            代码检查和结果校验
@@ -83,4 +93,7 @@ run_project.py      运行入口
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe scripts/check_project.py
+
+# 已生成准备结果后，独立核对筛选投影、采样和统计
+.\.venv\Scripts\python.exe scripts/verify_preparation.py
 ```
